@@ -26,7 +26,7 @@ playwright install chromium
 ## 2. Configuração
 
 ```bash
-cp config.env.example .env
+copy .env.example .env
 ```
 
 Edite `.env` e preencha:
@@ -93,7 +93,7 @@ Se ele travar em algum ponto:
 ## Estrutura dos arquivos
 
 ```
-config.env.example   -> modelo de configuração (copiar para config.env)
+.env.example         -> modelo de configuração (copiar para .env)
 requirements.txt     -> dependências Python
 jira_client.py        -> busca e filtra cards no Jira
 drive_helper.py       -> localiza pasta e classifica PDFs no Drive
