@@ -1,13 +1,3 @@
-"""
-jira_client.py
-Busca no Jira os cards do projeto BOBA que precisam de indicação de condutor,
-filtrando por status "In Execution" e órgão PRF (código 100).
-
-Como o nome exato dos campos customizados (AIT, Placa, Nome do órgão) pode
-variar, este módulo primeiro descobre os IDs dos campos pelo NOME (via
-/rest/api/3/field) e depois usa esses IDs na busca. Isso evita ficar
-"chutando" customfield_12345 no código.
-"""
 
 import requests
 import time
@@ -16,7 +6,6 @@ from unidecode import unidecode
 
 
 def _norm(texto: str) -> str:
-    """Normaliza texto para comparação: minúsculo, sem acento, sem espaço extra."""
     if texto is None:
         return ""
     return unidecode(str(texto)).strip().lower()
@@ -39,7 +28,6 @@ class JiraClient:
 
     # ------------------------------------------------------------------
     def _carregar_campos(self):
-        """Monta um mapa {nome_do_campo_normalizado: id_do_campo}."""
         if self._field_map is not None:
             return self._field_map
 
@@ -58,11 +46,7 @@ class JiraClient:
         return mapa
 
     def encontrar_campo(self, *pistas):
-        """
-        Procura o ID do campo cujo nome contenha alguma das 'pistas'
-        (ex.: encontrar_campo("ait") acha "AIT", "Número AIT", "Nº AIT"...).
-        Retorna o primeiro que bater, ou None se não achar nenhum.
-        """
+        
         mapa = self._carregar_campos()
         for nome_normalizado, campo_id in mapa.items():
             for pista in pistas:
@@ -72,9 +56,7 @@ class JiraClient:
 
         # ------------------------------------------------------------------
     def buscar_issues(self, jql: str, campos_extra: list[str]):
-        """
-        Executa a busca JQL usando o endpoint novo do Jira Cloud.
-        """
+       
         issues = []
         next_page_token = None
 
@@ -112,17 +94,7 @@ class JiraClient:
         return issues
     # ------------------------------------------------------------------
     def listar_cards_para_indicacao(self, jql: str):
-        """
-        Retorna uma lista de dicts prontos para uso:
-        [{ "boba": "13450", "chave": "BOBA-13450", "ait": "...", "placa": "...",
-           "status": "In Execution", "orgao_nome": "...", "orgao_codigo": "100" }, ...]
-
-        Aplica os filtros extras que a JQL sozinha não garante 100%:
-          - status == "In Execution"
-          - nome do órgão contém "PRF" ou "POLICIA RODOVIARIA FEDERAL"
-        Ajuste as listas AIT_PISTAS / PLACA_PISTAS / ORGAO_NOME_PISTAS abaixo
-        se os nomes dos seus campos customizados forem diferentes.
-        """
+        
         AIT_PISTAS = ["ait", "auto de infra"]
         PLACA_PISTAS = ["placa"]
         ORGAO_NOME_PISTAS = ["nome do orgao", "nome órgão", "orgao"]
@@ -183,10 +155,7 @@ class JiraClient:
         return resultado
     
     def adicionar_comentario(self, issue_key: str, numero_processo: str):
-                
-                """
-                Adiciona um comentário com o número do processo SEI.
-            """
+            
 
                 url = f"{self.base_url}/rest/api/3/issue/{issue_key}/comment"
 
@@ -222,9 +191,7 @@ class JiraClient:
 
                 print(f"Comentário adicionado em {issue_key}")  
     def atualizar_metodo_online(self, chave):
-        """
-        Atualiza o campo Método no Jira para 'Online'.
-        """
+    
         # ID do campo 'Método de Indicação' no seu Jira
         campo_metodo = "customfield_10621"
         url = f"{self.base_url}/rest/api/3/issue/{chave}"
@@ -265,7 +232,7 @@ class JiraClient:
             print(f"⚠️ Erro ao atualizar método em {chave}: {e}")
 
     def atualizar_data_indicacao(self, chave):
-        """Atualiza a data de indicação para hoje."""
+
         campo_data = "customfield_10620"
         url = f"{self.base_url}/rest/api/3/issue/{chave}"
         hoje = datetime.now().strftime("%Y-%m-%d")
@@ -281,7 +248,7 @@ class JiraClient:
         print(f"Data de indicação atualizada em {chave}: {hoje}")
 
     def atualizar_status_em_andamento(self, chave):
-        """Move o status para 'Enviada para órgão'."""
+
         url = f"{self.base_url}/rest/api/3/issue/{chave}/transitions"
 
         resposta = requests.get(
